@@ -2,384 +2,500 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # Cấu hình trang Streamlit
-st.set_page_config(page_title="Penalty Shooters 2 Pro", page_icon="⚽", layout="centered")
+st.set_page_config(page_title="Level Devil - Streamlit Edition", page_icon="😈", layout="centered")
 
-st.title("⚽ Penalty Shooters 2: Pro Edition")
-st.markdown("Nút bấm bắt đầu game đã được nâng cấp thiết kế cực đẹp!")
+st.title("😈 LEVEL DEVIL")
+st.caption("Game Platformer Troll kinh điển - Hãy cẩn thận với những cái bẫy bất ngờ!")
 
-# ------------------------------------------------------------------
-# PHẦN ASSET HÌNH ẢNH (BẠN CÓ THỂ THAY BẰNG LINK ANH HOẶC BASE64 CỦA BẠN)
-# ------------------------------------------------------------------
-ASSETS = {
-    "bg": "https://via.placeholder.com/700x480/1e4d2b/ffffff?text=Stadium+3D+Background",
-    "goal": "https://via.placeholder.com/400x180/ffffff/000000?text=Realistic+Goal+Net",
-    "ball": "https://via.placeholder.com/24/ffffff/000000?text=⚽",
-    "player_idle": "https://via.placeholder.com/100x150/ff0000/ffffff?text=Player+Idle",
-    "player_kick": "https://via.placeholder.com/120x150/cc0000/ffffff?text=Player+Kick",
-    "keeper_idle": "https://via.placeholder.com/60x90/00ffff/000000?text=GK+Idle",
-    "keeper_dive_l": "https://via.placeholder.com/110x70/00cccc/000000?text=GK+Dive+L",
-    "keeper_dive_r": "https://via.placeholder.com/110x70/00cccc/000000?text=GK+Dive+R",
-}
-
-game_html = f"""
+# Mã nguồn HTML, CSS và JS cho game Level Devil
+game_html = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
-        body {{ 
-            margin: 0; 
-            padding: 0; 
-            background-color: #0b1329; 
-            color: white; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }}
-        #gameContainer {{ 
-            position: relative; 
-            width: 700px; 
-            height: 480px; 
-            overflow: hidden; 
-            border-radius: 12px; 
-            box-shadow: 0 0 30px rgba(0,0,0,0.8); 
-        }}
-        canvas {{ 
-            background-color: #1a1a1a; 
-            cursor: crosshair; 
-        }}
-        
-        /* Overlay Menu */
-        #menuOverlay {{ 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: radial-gradient(circle, rgba(15,23,42,0.85) 0%, rgba(11,19,41,0.95) 100%); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 100; 
-            backdrop-filter: blur(4px);
-        }}
-        .game-title {{ 
-            font-size: 44px; 
-            font-weight: 900; 
-            background: linear-gradient(135deg, #fff 0%, #ffcc00 50%, #ff9900 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 20px rgba(255, 204, 0, 0.3);
-            margin-bottom: 5px; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            text-align: center;
-        }}
-        
-        /* NÚT BẮT ĐẦU GAME (START BUTTON STYLING) */
-        .play-btn {{
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        #gameContainer {
             position: relative;
-            padding: 18px 48px;
-            font-size: 22px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #0d1117;
-            background: linear-gradient(135deg, #ffea00, #ff9100);
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 145, 0, 0.6), 0 6px 0px #b36200;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 800px;
+            height: 450px;
+            box-shadow: 0 0 20px rgba(255, 68, 0, 0.4);
+            border-radius: 8px;
             overflow: hidden;
+        }
+        canvas {
+            background-color: #e58229;
+            display: block;
+        }
+        
+        /* Overlay Menu giống hệt ảnh mẫu */
+        #menuOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e58229;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            z-index: 10;
+        }
+
+        .title-container {
+            width: 100%;
+            background-color: #791c0e;
+            padding: 25px 0;
+            text-align: center;
+            position: relative;
+            border-bottom: 8px solid #c24b17;
+        }
+
+        .game-title {
+            font-size: 56px;
+            font-weight: 900;
+            color: #ee5b28;
+            letter-spacing: 4px;
+            text-shadow: 3px 3px 0px #380a04;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* Dãy hình răng cưa lửa/gai dưới menu */
+        .fire-teeth {
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                -45deg,
+                #c24b17,
+                #c24b17 10px,
+                #e58229 10px,
+                #e58229 20px
+            );
+            margin-bottom: 40px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .mode-btn {
+            width: 130px;
+            height: 140px;
+            background-color: #ffda66;
+            border: 4px solid #791c0e;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            box-shadow: 0 6px 0px #791c0e;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .mode-btn.two-p {
+            background-color: #eb8f85;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0px #791c0e;
+        }
+
+        .mode-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0px #791c0e;
+        }
+
+        .btn-icon {
+            flex-grow: 1;
             display: flex;
             align-items: center;
-            gap: 12px;
-        }}
+            justify-content: center;
+            gap: 8px;
+        }
 
-        /* Hiệu ứng Ánh sáng lướt qua trên nút */
-        .play-btn::before {{
-            content: '';
+        .player-sprite {
+            width: 24px;
+            height: 38px;
+            background-color: #2b1d1d;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+        .player-sprite.p2 {
+            background-color: #8b2b2b;
+        }
+
+        .btn-label {
+            width: 100%;
+            background-color: #b83a21;
+            color: #ffda66;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 6px 0;
+            text-align: center;
+            border-top: 3px solid #791c0e;
+        }
+
+        .mode-btn.two-p .btn-label {
+            background-color: #791c0e;
+            color: #eb8f85;
+        }
+
+        #uiHeader {
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(45deg) translateY(-100%);
-            transition: transform 0.6s ease;
-        }}
-
-        .play-btn:hover::before {{
-            transform: rotate(45deg) translateY(100%);
-        }}
-
-        .play-btn:hover {{
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 0 30px rgba(255, 200, 0, 0.9), 0 9px 0px #b36200;
-            background: linear-gradient(135deg, #fff066, #ffa726);
-        }}
-
-        .play-btn:active {{
-            transform: translateY(3px) scale(0.98);
-            box-shadow: 0 0 15px rgba(255, 145, 0, 0.8), 0 2px 0px #b36200;
-        }}
-        
-        #scoreboard {{ 
-            position: absolute; 
-            top: 12px; 
-            left: 15px; 
-            right: 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            font-size: 16px; 
-            font-weight: 700; 
-            color: #fff; 
-            z-index: 10; 
-            pointer-events: none; 
-        }}
-        .stat-box {{ 
-            background: rgba(0, 0, 0, 0.6); 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255,255,255,0.15); 
-            backdrop-filter: blur(5px);
-        }}
-        
-        #messageBox {{ 
-            position: absolute; 
-            top: 85px; 
-            width: 100%; 
-            text-align: center; 
-            font-size: 30px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            text-shadow: 0 0 12px rgba(0,0,0,0.9); 
-            z-index: 50; 
-            pointer-events: none; 
-        }}
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+            color: #380a04;
+            z-index: 5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
     <div id="gameContainer">
-        <div id="scoreboard">
-            <div class="stat-box">⚽ Goals: <span id="goals" style="color: #00ffcc;">0</span></div>
-            <div class="stat-box">Lượt sút: <span id="shots">0</span>/10</div>
-            <div class="stat-box">Thủ môn cản: <span id="saves" style="color: #ff4d4d;">0</span></div>
+        <div id="uiHeader">
+            <div id="levelText">LEVEL 1</div>
+            <div id="deathText">DEATHS: 0</div>
         </div>
-        
-        <div id="messageBox"></div>
 
-        <!-- MENU GAME VỚI NÚT CHƠI MỚI -->
+        <!-- Menu overlay khớp 100% hình ảnh -->
         <div id="menuOverlay">
-            <div class="game-title">PENALTY SHOOTERS 2</div>
-            <p style="color: #94a3b8; margin-top: 0; margin-bottom: 30px; font-size: 16px; font-weight: 500;">
-                Hãy chọn góc sút để hạ gục thủ môn đối phương!
-            </p>
-            <button class="play-btn" onclick="startGame()">
-                <span>⚽ BẮT ĐẦU SÚT</span>
-            </button>
+            <div class="title-container">
+                <h1 class="game-title">LEVEL DEVIL</h1>
+            </div>
+            <div class="fire-teeth"></div>
+
+            <div class="btn-container">
+                <div class="mode-btn" onclick="selectMode(1)">
+                    <div class="btn-icon">
+                        <div class="player-sprite"></div>
+                    </div>
+                    <div class="btn-label">1 Player</div>
+                </div>
+
+                <div class="mode-btn two-p" onclick="selectMode(2)">
+                    <div class="btn-icon">
+                        <div class="player-sprite p2"></div>
+                        <div class="player-sprite"></div>
+                    </div>
+                    <div class="btn-label">2 Player</div>
+                </div>
+            </div>
         </div>
 
-        <canvas id="gameCanvas" width="700" height="480"></canvas>
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const menuOverlay = document.getElementById("menuOverlay");
-        const goalsEl = document.getElementById("goals");
-        const shotsEl = document.getElementById("shots");
-        const savesEl = document.getElementById("saves");
-        const messageBox = document.getElementById("messageBox");
+        const levelText = document.getElementById("levelText");
+        const deathText = document.getElementById("deathText");
 
-        // LOAD ASSET
-        const img = {{}};
-        const assetsBaseUrl = {str(ASSETS)};
-        let assetsLoaded = 0;
-        const totalAssets = Object.keys(assetsBaseUrl).length;
+        let gameMode = 1; // 1 hoặc 2 người chơi
+        let currentLevel = 1;
+        let totalDeaths = 0;
+        let gameActive = false;
 
-        function loadAssets(callback) {{
-            for (let key in assetsBaseUrl) {{
-                img[key] = new Image();
-                img[key].src = assetsBaseUrl[key];
-                img[key].onload = () => {{
-                    assetsLoaded++;
-                    if (assetsLoaded === totalAssets) callback();
-                }};
-            }}
-        }}
+        // Bàn phím
+        const keys = {};
+        window.addEventListener("keydown", e => {
+            keys[e.code] = true;
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyW", "KeyA", "KeyS", "KeyD"].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener("keyup", e => { keys[e.code] = false; });
 
-        let gameRunning = false;
-        let goals = 0, shots = 0, saves = 0;
-        const goalRect = {{ x: 150, y: 70, width: 400, height: 180 }};
-        
-        let ball = {{ x: 350, y: 400, radius: 12, targetX: 350, targetY: 400, speed: 10, isMoving: false }};
-        let player = {{ x: 350, y: 400, width: 100, height: 150, state: 'idle' }};
-        let keeper = {{ x: 350, y: 150, width: 60, height: 90, targetX: 350, speed: 7, state: 'idle' }};
+        // Cấu trúc nhân vật
+        class Player {
+            constructor(x, y, color, controls) {
+                this.spawnX = x;
+                this.spawnY = y;
+                this.x = x;
+                this.y = y;
+                this.width = 24;
+                this.height = 36;
+                this.vx = 0;
+                this.vy = 0;
+                this.color = color;
+                this.controls = controls; // {left, right, jump}
+                this.isGrounded = false;
+                this.alive = true;
+            }
 
-        let targetIndicator = {{ x: -100, y: -100, alpha: 0 }};
-        let messageTimer = 0;
+            reset() {
+                this.x = this.spawnX;
+                this.y = this.spawnY;
+                this.vx = 0;
+                this.vy = 0;
+                this.isGrounded = false;
+                this.alive = true;
+            }
 
-        function startGame() {{
-            goals = 0; shots = 0; saves = 0;
-            updateScoreboard();
-            menuOverlay.style.opacity = "0";
-            setTimeout(() => {{ menuOverlay.style.display = "none"; }}, 300);
-            gameRunning = true;
-            resetRound();
-        }}
+            update(platforms, hazards) {
+                if (!this.alive) return;
 
-        function updateScoreboard() {{
-            goalsEl.innerText = goals;
-            shotsEl.innerText = shots;
-            savesEl.innerText = saves;
-        }}
+                // Điều khiển di chuyển
+                if (keys[this.controls.left]) this.vx = -4;
+                else if (keys[this.controls.right]) this.vx = 4;
+                else this.vx = 0;
 
-        function resetRound() {{
-            ball.x = 350; ball.y = 400; ball.isMoving = false;
-            keeper.x = 350; keeper.targetX = 350; keeper.state = 'idle';
-            player.state = 'idle';
-            targetIndicator.alpha = 0;
-        }}
+                // Nhảy
+                if (keys[this.controls.jump] && this.isGrounded) {
+                    this.vy = -9.5;
+                    this.isGrounded = false;
+                }
 
-        canvas.addEventListener("click", (e) => {{
-            if (!gameRunning || ball.isMoving) return;
+                // Trọng lực
+                this.vy += 0.5;
 
-            const rect = canvas.getBoundingClientRect();
-            let clickX = e.clientX - rect.left;
-            let clickY = e.clientY - rect.top;
+                // Cập nhật vị trí X & Va chạm
+                this.x += this.vx;
+                platforms.forEach(p => {
+                    if (checkCollision(this, p)) {
+                        if (this.vx > 0) this.x = p.x - this.width;
+                        else if (this.vx < 0) this.x = p.x + p.w;
+                    }
+                });
 
-            if (clickX >= goalRect.x && clickX <= goalRect.x + goalRect.width &&
-                clickY >= goalRect.y && clickY <= goalRect.y + goalRect.height) {{
+                // Cập nhật vị trí Y & Va chạm
+                this.y += this.vy;
+                this.isGrounded = false;
+                platforms.forEach(p => {
+                    if (checkCollision(this, p)) {
+                        if (this.vy > 0) {
+                            this.y = p.y - this.height;
+                            this.vy = 0;
+                            this.isGrounded = true;
+                        } else if (this.vy < 0) {
+                            this.y = p.y + p.h;
+                            this.vy = 0;
+                        }
+                    }
+                });
+
+                // Kiểm tra va chạm với bẫy / rớt ra ngoài
+                if (this.y > canvas.height + 50) this.die();
+
+                hazards.forEach(h => {
+                    if (checkCollision(this, h)) this.die();
+                });
+            }
+
+            die() {
+                if (!this.alive) return;
+                this.alive = false;
+                totalDeaths++;
+                deathText.innerText = `DEATHS: ${totalDeaths}`;
+                setTimeout(() => resetCurrentLevel(), 300);
+            }
+
+            draw() {
+                if (!this.alive) return;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 
-                shots++;
-                player.state = 'kick';
-                ball.targetX = clickX; ball.targetY = clickY; ball.isMoving = true; ball.speed = 12;
+                // Vẽ mắt
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(this.x + (this.vx >= 0 ? 14 : 4), this.y + 8, 5, 5);
+            }
+        }
 
-                targetIndicator.x = clickX; targetIndicator.y = clickY; targetIndicator.alpha = 1.0;
+        // Kiểm tra va chạm AABB
+        function checkCollision(a, b) {
+            return a.x < b.x + b.w &&
+                   a.x + a.width > b.x &&
+                   a.y < b.y + b.h &&
+                   a.y + a.height > b.y;
+        }
 
-                // AI thủ môn phán đoán linh hoạt
-                let aiJudgment = Math.random();
-                if (aiJudgment < 0.2) {{
-                    keeper.targetX = keeper.x;
-                    keeper.state = 'idle';
-                }} else if (aiJudgment < 0.5) {{
-                    keeper.targetX = goalRect.x + 50 + Math.random() * (goalRect.width - 100);
-                    keeper.state = keeper.targetX < 350 ? 'dive_l' : 'dive_r';
-                }} else {{
-                    let error = (Math.random() - 0.5) * 60;
-                    keeper.targetX = Math.max(goalRect.x + 40, Math.min(goalRect.x + goalRect.width - 40, clickX + error));
-                    keeper.state = keeper.targetX < 350 ? 'dive_l' : 'dive_r';
-                }}
-                keeper.speed = 8 + Math.random() * 4;
-            }}
-        }});
+        // Định nghĩa các level & hiệu ứng TROLL đặc trưng của Level Devil
+        let players = [];
+        let platforms = [];
+        let hazards = [];
+        let door = { x: 0, y: 0, w: 32, h: 48 };
 
-        function update() {{
-            if (!gameRunning) return;
+        function loadLevel(lvl) {
+            currentLevel = lvl;
+            levelText.innerText = `LEVEL ${currentLevel}`;
+            platforms = [];
+            hazards = [];
 
-            if (ball.isMoving) {{
-                let dx = ball.targetX - ball.x;
-                let dy = ball.targetY - ball.y;
-                let dist = Math.hypot(dx, dy);
+            if (lvl === 1) {
+                // LEVEL 1: Cửa tự động dịch chuyển xa ra khi lại gần
+                door = { x: 700, y: 312, w: 32, h: 48, defaultX: 700 };
+                platforms = [
+                    { x: 50, y: 360, w: 200, h: 40 },
+                    { x: 300, y: 360, w: 200, h: 40 },
+                    { x: 550, y: 360, w: 200, h: 40 }
+                ];
+            } else if (lvl === 2) {
+                // LEVEL 2: Đất sụt lở bất ngờ khi đi qua
+                door = { x: 700, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 180, h: 40 },
+                    { x: 280, y: 360, w: 240, h: 40, isTrap: true, triggered: false }, // Đất biến mất
+                    { x: 580, y: 360, w: 170, h: 40 }
+                ];
+            } else if (lvl === 3) {
+                // LEVEL 3: Cọc nhọn bất ngờ nhô lên
+                door = { x: 720, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 700, h: 40 }
+                ];
+                hazards = [
+                    { x: 380, y: 400, w: 40, h: 30, targetY: 330, isSpikeTrap: true }
+                ];
+            }
 
-                if (dist > 5) {{
-                    ball.x += (dx / dist) * ball.speed;
-                    ball.y += (dy / dist) * ball.speed;
-                }} else {{
-                    checkGoal();
-                    player.state = 'idle';
-                }}
-            }}
+            // Khởi tạo người chơi
+            if (gameMode === 1) {
+                players = [
+                    new Player(80, 300, "#2b1d1d", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" })
+                ];
+            } else {
+                players = [
+                    new Player(80, 300, "#2b1d1d", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" }),
+                    new Player(120, 300, "#8b2b2b", { left: "KeyA", right: "KeyD", jump: "KeyW" })
+                ];
+            }
+        }
 
-            let kDx = keeper.targetX - keeper.x;
-            if (Math.abs(kDx) > 3) {{
-                keeper.x += Math.sign(kDx) * keeper.speed;
-            }} else {{
-                if (!ball.isMoving) keeper.state = 'idle';
-            }}
+        function selectMode(mode) {
+            gameMode = mode;
+            menuOverlay.style.display = "none";
+            gameActive = true;
+            totalDeaths = 0;
+            deathText.innerText = `DEATHS: 0`;
+            loadLevel(1);
+        }
 
-            if (messageTimer > 0) {{
-                messageTimer--;
-                if (messageTimer === 0) messageBox.innerText = "";
-            }}
-        }}
+        function resetCurrentLevel() {
+            loadLevel(currentLevel);
+        }
 
-        function checkGoal() {{
-            ball.isMoving = false;
-            let distanceToKeeper = Math.hypot(ball.x - keeper.x, ball.y - keeper.y);
+        function update() {
+            if (!gameActive) return;
 
-            if (distanceToKeeper < 50) {{
-                saves++;
-                messageBox.innerText = "❌ THỦ MÔN CẢN PHÁ!";
-                messageBox.style.color = "#ff4d4d";
-            }} else {{
-                goals++;
-                messageBox.innerText = "GOAL! ⚽ VÀO RẤT ĐẸP!";
-                messageBox.style.color = "#00ffcc";
-            }}
+            players.forEach(p => p.update(platforms, hazards));
 
-            updateScoreboard();
-            messageTimer = 80;
+            // TROLL MECHANICS DỰA TRÊN LEVEL
+            if (currentLevel === 1) {
+                // Nếu người chơi lại gần cửa, cửa tự dịch chuyển sang phải
+                players.forEach(p => {
+                    if (Math.abs(p.x - door.x) < 100 && door.x < 740) {
+                        door.x += 3;
+                    }
+                });
+            } else if (currentLevel === 2) {
+                // Bẫy đất sụt biến mất
+                platforms.forEach((p, idx) => {
+                    if (p.isTrap) {
+                        players.forEach(player => {
+                            if (player.x > p.x && player.x < p.x + p.w) {
+                                p.y += 8; // Sụt hố xuống dưới
+                            }
+                        });
+                    }
+                });
+            } else if (currentLevel === 3) {
+                // Bẫy chông nhô lên bất ngờ
+                hazards.forEach(h => {
+                    if (h.isSpikeTrap) {
+                        players.forEach(p => {
+                            if (Math.abs(p.x - h.x) < 120 && h.y > h.targetY) {
+                                h.y -= 5;
+                            }
+                        });
+                    }
+                });
+            }
 
-            if (shots >= 10) {{
-                gameRunning = false;
-                setTimeout(() => {{
-                    menuOverlay.style.display = "flex";
-                    menuOverlay.style.opacity = "1";
-                    document.querySelector(".game-title").innerText = "KẾT QUẢ TRẬN ĐẤU";
-                    document.querySelector("#menuOverlay p").innerHTML = `Bạn ghi được <b style="color:#00ffcc">${goals}</b> / 10 bàn thắng!`;
-                }}, 1500);
-            }} else {{
-                setTimeout(resetRound, 1200);
-            }}
-        }}
+            // Kiểm tra thắng level (khi tất cả người chơi sống sót chạm cửa)
+            let alivePlayers = players.filter(p => p.alive);
+            if (alivePlayers.length > 0) {
+                let allReachedDoor = alivePlayers.every(p => checkCollision(p, door));
+                if (allReachedDoor) {
+                    if (currentLevel < 3) {
+                        loadLevel(currentLevel + 1);
+                    } else {
+                        alert("🎉 CHÚC MỪNG BẠN ĐÃ VƯỢT QUA LEVEL DEVIL!");
+                        menuOverlay.style.display = "flex";
+                        gameActive = false;
+                    }
+                }
+            }
+        }
 
-        function draw() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function draw() {
+            // Nền cam ấm áp của Level Devil
+            ctx.fillStyle = "#e58229";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Sân 3D
-            ctx.drawImage(img.bg, 0, 0, canvas.width, canvas.height);
+            if (!gameActive) return;
 
-            // 2. Khung thành
-            ctx.drawImage(img.goal, goalRect.x, goalRect.y, goalRect.width, goalRect.height);
+            // Vẽ sàn / Platforms
+            ctx.fillStyle = "#791c0e";
+            platforms.forEach(p => {
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+            });
 
-            // 3. Cầu thủ
-            let pImg = player.state === 'kick' ? img.player_kick : img.player_idle;
-            ctx.drawImage(pImg, player.x - player.width/2, player.y - player.height/2, player.width, player.height);
-
-            // 4. Thủ môn
-            let kImg = img.keeper_idle;
-            let kw = keeper.width, kh = keeper.height;
-            if (keeper.state === 'dive_l') {{ kImg = img.keeper_dive_l; kw = 110; kh = 70; }}
-            else if (keeper.state === 'dive_r') {{ kImg = img.keeper_dive_r; kw = 110; kh = 70; }}
-            ctx.drawImage(kImg, keeper.x - kw/2, keeper.y, kw, kh);
-
-            // 5. Tâm ngắm Red Dot
-            if (targetIndicator.alpha > 0) {{
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 3;
+            // Vẽ bẫy chông
+            ctx.fillStyle = "#222";
+            hazards.forEach(h => {
                 ctx.beginPath();
-                ctx.arc(targetIndicator.x, targetIndicator.y, 14, 0, Math.PI * 2);
-                ctx.stroke();
-            }}
+                ctx.moveTo(h.x, h.y + h.h);
+                ctx.lineTo(h.x + h.w / 2, h.y);
+                ctx.lineTo(h.x + h.w, h.y + h.h);
+                ctx.fill();
+            });
 
-            // 6. Quả bóng
-            ctx.drawImage(img.ball, ball.x - ball.radius, ball.y - ball.radius, ball.radius*2, ball.radius*2);
-        }}
+            // Vẽ Cửa hoàn thành (Door)
+            ctx.fillStyle = "#380a04";
+            ctx.fillRect(door.x, door.y, door.w, door.h);
+            ctx.fillStyle = "#ffda66";
+            ctx.fillRect(door.x + 4, door.y + 4, door.w - 8, door.h - 8);
 
-        loadAssets(() => {{
-            function gameLoop() {{ update(); draw(); requestAnimationFrame(gameLoop); }}
-            gameLoop();
-        }});
+            // Vẽ người chơi
+            players.forEach(p => p.draw());
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
     </script>
 </body>
 </html>
 """
 
-components.html(game_html, height=560)
+# Hiển thị Game lên ứng dụng Streamlit
+components.html(game_html, height=500)
