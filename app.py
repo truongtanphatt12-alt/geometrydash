@@ -5,9 +5,9 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Đào Vàng Cổ Điển - Streamlit", page_icon="⛏️", layout="centered")
 
 st.title("⛏️ ĐÀO VÀNG CỔ ĐIỂN")
-st.caption("Game Đào Vàng huyền thoại - Hãy kéo thật nhiều vàng để đạt mục tiêu trước khi hết giờ!")
+st.caption("Game Đào Vàng huyền thoại - Móc lắc chậm dễ căn chỉnh, có hình ảnh người điều khiển!")
 
-# Mã nguồn HTML, CSS và JS cho game Đào Vàng
+# Mã nguồn HTML, CSS và JS nâng cấp
 game_html = """
 <!DOCTYPE html>
 <html>
@@ -149,8 +149,7 @@ game_html = """
             <div class="controls-hint">
                 🎮 <b>CÁCH CHƠI:</b><br>
                 • Nhấn phím <b>MŨI TÊN XUỐNG (↓)</b> hoặc <b>DẤU CÁCH (SPACE)</b> để thả móc!<br>
-                • Vàng to = nhiều tiền nhưng kéo chậm.<br>
-                • Đá = nặng và ít tiền.
+                • Tốc độ móc lắc đã được chỉnh chậm lại dễ căn ngắm hơn.
             </div>
         </div>
 
@@ -174,22 +173,24 @@ game_html = """
         let timerInterval = null;
 
         // Trạng thái móc đào
-        const minerPos = { x: 375, y: 50 };
+        const minerPos = { x: 375, y: 55 };
         const hook = {
             x: 375,
-            y: 90,
+            y: 95,
             angle: 0,
-            angleSpeed: 0.03,
+            // ĐÃ GIẢM TỐC ĐỘ LẮC MÓC (Từ 0.03 xuống 0.015 giúp người chơi dễ nhắm)
+            angleSpeed: 0.015,
             length: 40,
             state: 'swing', // 'swing', 'shoot', 'retract'
-            shootSpeed: 8,
-            retractSpeed: 8,
+            // ĐÃ GIẢM TỐC ĐỘ THẢ MÓC (Từ 8 xuống 5.0)
+            shootSpeed: 5.0,
+            retractSpeed: 5.0,
             caughtItem: null
         };
 
         let items = [];
+        let winchAngle = 0; // Xoay bánh xe tời quay cáp
 
-        // Lắng nghe sự kiện bàn phím
         window.addEventListener("keydown", e => {
             if (["ArrowDown", "Space"].includes(e.code)) {
                 e.preventDefault();
@@ -215,23 +216,20 @@ game_html = """
             hook.caughtItem = null;
             updateUI();
 
-            // Tạo danh sách Vàng & Đá ngẫu nhiên
             items = [];
-            
             // Vàng lớn (3 cục)
             for (let i = 0; i < 3; i++) {
-                items.push(createItem('gold', 28 + Math.random() * 8, 500, 2.5));
+                items.push(createItem('gold', 28 + Math.random() * 8, 500, 1.8));
             }
             // Vàng vừa & nhỏ (5 cục)
             for (let i = 0; i < 5; i++) {
-                items.push(createItem('gold', 14 + Math.random() * 6, 150, 5.5));
+                items.push(createItem('gold', 14 + Math.random() * 6, 150, 4.0));
             }
             // Đá nặng (3 cục)
             for (let i = 0; i < 3; i++) {
-                items.push(createItem('rock', 22 + Math.random() * 10, 20, 1.5));
+                items.push(createItem('rock', 22 + Math.random() * 10, 20, 1.2));
             }
 
-            // Đếm ngược thời gian
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if (gameActive) {
@@ -266,7 +264,7 @@ game_html = """
         function update() {
             if (!gameActive) return;
 
-            // 1. Xoay móc
+            // 1. Xoay móc (Tốc độ lắc đã chậm lại)
             if (hook.state === 'swing') {
                 hook.angle += hook.angleSpeed;
                 if (hook.angle > 1.3 || hook.angle < -1.3) {
@@ -281,13 +279,11 @@ game_html = """
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
                 hook.y = minerPos.y + Math.cos(hook.angle) * hook.length;
 
-                // Kiểm tra va chạm với viền canvas
                 if (hook.x < 10 || hook.x > canvas.width - 10 || hook.y > canvas.height - 10) {
                     hook.state = 'retract';
-                    hook.retractSpeed = 8;
+                    hook.retractSpeed = 6;
                 }
 
-                // Kiểm tra va chạm với đồ vật
                 items.forEach(item => {
                     if (!item.caught) {
                         let dist = Math.hypot(hook.x - item.x, hook.y - item.y);
@@ -295,7 +291,7 @@ game_html = """
                             item.caught = true;
                             hook.caughtItem = item;
                             hook.state = 'retract';
-                            hook.retractSpeed = item.pullSpeed; // Tốc độ kéo phụ thuộc vào độ nặng
+                            hook.retractSpeed = item.pullSpeed;
                         }
                     }
                 });
@@ -305,19 +301,19 @@ game_html = """
                 hook.length -= hook.retractSpeed;
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
                 hook.y = minerPos.y + Math.cos(hook.angle) * hook.length;
+                
+                winchAngle += 0.2; // Quay tay tời khi kéo
 
                 if (hook.caughtItem) {
                     hook.caughtItem.x = hook.x;
                     hook.caughtItem.y = hook.y + hook.caughtItem.radius / 2;
                 }
 
-                // Móc đã về vị trí cũ
                 if (hook.length <= 40) {
                     hook.length = 40;
                     hook.state = 'swing';
                     if (hook.caughtItem) {
                         money += hook.caughtItem.value;
-                        // Xóa vật phẩm đã kéo lên
                         items = items.filter(i => i !== hook.caughtItem);
                         hook.caughtItem = null;
                         updateUI();
@@ -346,8 +342,8 @@ game_html = """
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Bầu trời / Mặt đất phía trên
-            ctx.fillStyle = "#e6a338";
+            // 1. Mặt đất phía trên
+            ctx.fillStyle = "#d49b4b";
             ctx.fillRect(0, 0, canvas.width, 60);
 
             // 2. Dây cáp
@@ -358,16 +354,59 @@ game_html = """
             ctx.lineTo(hook.x, hook.y);
             ctx.stroke();
 
-            // 3. Lão đào vàng
-            ctx.fillStyle = "#0066cc";
-            ctx.fillRect(minerPos.x - 15, minerPos.y - 25, 30, 25);
-            ctx.fillStyle = "#ffcc99";
-            ctx.beginPath(); ctx.arc(minerPos.x, minerPos.y - 30, 10, 0, Math.PI * 2); ctx.fill(); // Đầu
-            ctx.fillStyle = "white";
-            ctx.beginPath(); ctx.arc(minerPos.x, minerPos.y - 26, 8, 0, Math.PI); ctx.fill(); // Râu
+            // 3. VẼ NGƯỜI ĐIỀU KHIỂN LÃO ĐÀO VÀNG + CỔNG TỜI KÉO CÁP
+            // - Xe/Khung tời kéo cáp
+            ctx.fillStyle = "#663300";
+            ctx.fillRect(minerPos.x - 25, minerPos.y - 12, 50, 14);
+            
+            // Bánh xe tời xoay
+            ctx.fillStyle = "#402000";
+            ctx.beginPath();
+            ctx.arc(minerPos.x, minerPos.y - 5, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#994d00";
+            ctx.lineWidth = 3;
+            ctx.stroke();
 
-            // 4. Móc sắt
-            ctx.strokeStyle = "#555";
+            // Tay quay tời
+            let handleX = minerPos.x + Math.cos(winchAngle) * 12;
+            let handleY = (minerPos.y - 5) + Math.sin(winchAngle) * 12;
+            ctx.strokeStyle = "#ffcc00";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(minerPos.x, minerPos.y - 5);
+            ctx.lineTo(handleX, handleY);
+            ctx.stroke();
+
+            // - Lão đào vàng (Ông lão mũ vàng, râu trắng)
+            let mx = minerPos.x - 15;
+            let my = minerPos.y - 12;
+
+            // Áo xanh
+            ctx.fillStyle = "#0066cc";
+            ctx.fillRect(mx - 18, my - 20, 22, 20);
+
+            // Đầu & Mặt
+            ctx.fillStyle = "#ffcc99";
+            ctx.beginPath();
+            ctx.arc(mx - 7, my - 26, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bộ râu trắng đặc trưng của lão đào vàng
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(mx - 7, my - 22, 8, 0, Math.PI);
+            ctx.fill();
+
+            // Mũ bảo hộ vàng
+            ctx.fillStyle = "#ffcc00";
+            ctx.fillRect(mx - 18, my - 36, 22, 8);
+            ctx.beginPath();
+            ctx.arc(mx - 7, my - 34, 11, Math.PI, 0);
+            ctx.fill();
+
+            // 4. Móc sắt (Lắc chậm)
+            ctx.strokeStyle = "#444";
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.arc(hook.x, hook.y, 8, hook.angle, hook.angle + Math.PI);
@@ -381,7 +420,6 @@ game_html = """
                 ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
 
                 if (item.type === 'gold') {
-                    // Vàng phát sáng
                     ctx.fillStyle = "#ffcc00";
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = "#ffea80";
@@ -391,7 +429,6 @@ game_html = """
                     ctx.lineWidth = 3;
                     ctx.stroke();
                 } else {
-                    // Đá màu xám
                     ctx.fillStyle = "#808080";
                     ctx.fill();
                     ctx.strokeStyle = "#555555";
