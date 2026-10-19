@@ -5,9 +5,9 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Đào Vàng Cổ Điển - Streamlit", page_icon="⛏️", layout="centered")
 
 st.title("⛏️ ĐÀO VÀNG CỔ ĐIỂN")
-st.caption("Game Đào Vàng huyền thoại - Móc lắc chậm dễ căn chỉnh, có hình ảnh người điều khiển!")
+st.caption("Game Đào Vàng huyền thoại - Cục vàng thiết kế 3D góc cạnh, óng ánh sắc nét!")
 
-# Mã nguồn HTML, CSS và JS nâng cấp
+# Mã nguồn HTML, CSS và JS
 game_html = """
 <!DOCTYPE html>
 <html>
@@ -32,11 +32,11 @@ game_html = """
             height: 500px;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.4);
             border: 3px solid #b37400;
         }
         canvas {
-            background: linear-gradient(to bottom, #d4a359 0%, #a66e28 20%, #734311 100%);
+            background: linear-gradient(to bottom, #d4a359 0%, #a66e28 20%, #61380e 100%);
             display: block;
         }
         
@@ -97,7 +97,6 @@ game_html = """
             line-height: 1.6;
         }
 
-        /* Thanh thông số phía trên */
         #uiHeader {
             position: absolute;
             top: 0; left: 0; width: 100%;
@@ -115,14 +114,8 @@ game_html = """
             z-index: 5;
         }
 
-        .stat-item span {
-            color: #006600;
-            font-size: 18px;
-        }
-        .stat-target span {
-            color: #cc0000;
-            font-size: 18px;
-        }
+        .stat-item span { color: #006600; font-size: 18px; }
+        .stat-target span { color: #cc0000; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -149,7 +142,7 @@ game_html = """
             <div class="controls-hint">
                 🎮 <b>CÁCH CHƠI:</b><br>
                 • Nhấn phím <b>MŨI TÊN XUỐNG (↓)</b> hoặc <b>DẤU CÁCH (SPACE)</b> để thả móc!<br>
-                • Tốc độ móc lắc đã được chỉnh chậm lại dễ căn ngắm hơn.
+                • Đồ họa vàng 3D sắc nét, óng ánh!
             </div>
         </div>
 
@@ -172,24 +165,21 @@ game_html = """
         let currentLevel = 1;
         let timerInterval = null;
 
-        // Trạng thái móc đào
         const minerPos = { x: 375, y: 55 };
         const hook = {
             x: 375,
             y: 95,
             angle: 0,
-            // ĐÃ GIẢM TỐC ĐỘ LẮC MÓC (Từ 0.03 xuống 0.015 giúp người chơi dễ nhắm)
             angleSpeed: 0.015,
             length: 40,
-            state: 'swing', // 'swing', 'shoot', 'retract'
-            // ĐÃ GIẢM TỐC ĐỘ THẢ MÓC (Từ 8 xuống 5.0)
+            state: 'swing',
             shootSpeed: 5.0,
             retractSpeed: 5.0,
             caughtItem: null
         };
 
         let items = [];
-        let winchAngle = 0; // Xoay bánh xe tời quay cáp
+        let winchAngle = 0;
 
         window.addEventListener("keydown", e => {
             if (["ArrowDown", "Space"].includes(e.code)) {
@@ -217,17 +207,21 @@ game_html = """
             updateUI();
 
             items = [];
-            // Vàng lớn (3 cục)
-            for (let i = 0; i < 3; i++) {
-                items.push(createItem('gold', 28 + Math.random() * 8, 500, 1.8));
+            // Vàng siêu to (2 cục)
+            for (let i = 0; i < 2; i++) {
+                items.push(createItem('gold', 32 + Math.random() * 6, 500, 1.6));
             }
-            // Vàng vừa & nhỏ (5 cục)
-            for (let i = 0; i < 5; i++) {
-                items.push(createItem('gold', 14 + Math.random() * 6, 150, 4.0));
+            // Vàng vừa (4 cục)
+            for (let i = 0; i < 4; i++) {
+                items.push(createItem('gold', 20 + Math.random() * 5, 250, 3.2));
             }
-            // Đá nặng (3 cục)
+            // Vàng nhỏ (3 cục)
             for (let i = 0; i < 3; i++) {
-                items.push(createItem('rock', 22 + Math.random() * 10, 20, 1.2));
+                items.push(createItem('gold', 12 + Math.random() * 4, 100, 5.0));
+            }
+            // Đá (3 cục)
+            for (let i = 0; i < 3; i++) {
+                items.push(createItem('rock', 22 + Math.random() * 8, 20, 1.2));
             }
 
             clearInterval(timerInterval);
@@ -242,15 +236,30 @@ game_html = """
             }, 1000);
         }
 
+        // Tạo vật phẩm với hình dáng đa giác góc cạnh tự nhiên
         function createItem(type, radius, value, pullSpeed) {
+            let points = [];
+            let numPoints = type === 'gold' ? 7 + Math.floor(Math.random() * 3) : 6;
+            
+            // Tạo các điểm góc ngẫu nhiên quanh bán kính
+            for (let i = 0; i < numPoints; i++) {
+                let angle = (i / numPoints) * Math.PI * 2;
+                let rOffset = radius * (0.85 + Math.random() * 0.3);
+                points.push({
+                    x: Math.cos(angle) * rOffset,
+                    y: Math.sin(angle) * rOffset
+                });
+            }
+
             return {
-                x: 60 + Math.random() * 630,
-                y: 150 + Math.random() * 300,
+                x: 70 + Math.random() * 610,
+                y: 160 + Math.random() * 290,
                 radius: radius,
                 type: type,
                 value: value,
                 pullSpeed: pullSpeed,
-                caught: false
+                caught: false,
+                points: points
             };
         }
 
@@ -264,7 +273,6 @@ game_html = """
         function update() {
             if (!gameActive) return;
 
-            // 1. Xoay móc (Tốc độ lắc đã chậm lại)
             if (hook.state === 'swing') {
                 hook.angle += hook.angleSpeed;
                 if (hook.angle > 1.3 || hook.angle < -1.3) {
@@ -273,7 +281,6 @@ game_html = """
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
                 hook.y = minerPos.y + Math.cos(hook.angle) * hook.length;
             } 
-            // 2. Thả móc xuống
             else if (hook.state === 'shoot') {
                 hook.length += hook.shootSpeed;
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
@@ -287,7 +294,7 @@ game_html = """
                 items.forEach(item => {
                     if (!item.caught) {
                         let dist = Math.hypot(hook.x - item.x, hook.y - item.y);
-                        if (dist < item.radius + 5) {
+                        if (dist < item.radius + 6) {
                             item.caught = true;
                             hook.caughtItem = item;
                             hook.state = 'retract';
@@ -296,13 +303,12 @@ game_html = """
                     }
                 });
             } 
-            // 3. Kéo móc lên
             else if (hook.state === 'retract') {
                 hook.length -= hook.retractSpeed;
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
                 hook.y = minerPos.y + Math.cos(hook.angle) * hook.length;
                 
-                winchAngle += 0.2; // Quay tay tời khi kéo
+                winchAngle += 0.2;
 
                 if (hook.caughtItem) {
                     hook.caughtItem.x = hook.x;
@@ -342,7 +348,7 @@ game_html = """
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Mặt đất phía trên
+            // 1. Mặt đất
             ctx.fillStyle = "#d49b4b";
             ctx.fillRect(0, 0, canvas.width, 60);
 
@@ -354,12 +360,10 @@ game_html = """
             ctx.lineTo(hook.x, hook.y);
             ctx.stroke();
 
-            // 3. VẼ NGƯỜI ĐIỀU KHIỂN LÃO ĐÀO VÀNG + CỔNG TỜI KÉO CÁP
-            // - Xe/Khung tời kéo cáp
+            // 3. Người điều khiển & Khung tời
             ctx.fillStyle = "#663300";
             ctx.fillRect(minerPos.x - 25, minerPos.y - 12, 50, 14);
             
-            // Bánh xe tời xoay
             ctx.fillStyle = "#402000";
             ctx.beginPath();
             ctx.arc(minerPos.x, minerPos.y - 5, 12, 0, Math.PI * 2);
@@ -368,7 +372,6 @@ game_html = """
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // Tay quay tời
             let handleX = minerPos.x + Math.cos(winchAngle) * 12;
             let handleY = (minerPos.y - 5) + Math.sin(winchAngle) * 12;
             ctx.strokeStyle = "#ffcc00";
@@ -378,34 +381,29 @@ game_html = """
             ctx.lineTo(handleX, handleY);
             ctx.stroke();
 
-            // - Lão đào vàng (Ông lão mũ vàng, râu trắng)
             let mx = minerPos.x - 15;
             let my = minerPos.y - 12;
 
-            // Áo xanh
             ctx.fillStyle = "#0066cc";
             ctx.fillRect(mx - 18, my - 20, 22, 20);
 
-            // Đầu & Mặt
             ctx.fillStyle = "#ffcc99";
             ctx.beginPath();
             ctx.arc(mx - 7, my - 26, 9, 0, Math.PI * 2);
             ctx.fill();
 
-            // Bộ râu trắng đặc trưng của lão đào vàng
             ctx.fillStyle = "#ffffff";
             ctx.beginPath();
             ctx.arc(mx - 7, my - 22, 8, 0, Math.PI);
             ctx.fill();
 
-            // Mũ bảo hộ vàng
             ctx.fillStyle = "#ffcc00";
             ctx.fillRect(mx - 18, my - 36, 22, 8);
             ctx.beginPath();
             ctx.arc(mx - 7, my - 34, 11, Math.PI, 0);
             ctx.fill();
 
-            // 4. Móc sắt (Lắc chậm)
+            // 4. Móc sắt
             ctx.strokeStyle = "#444";
             ctx.lineWidth = 4;
             ctx.beginPath();
@@ -414,27 +412,72 @@ game_html = """
 
             if (!gameActive && menuOverlay.style.display !== "none") return;
 
-            // 5. Vẽ Vàng & Đá
+            // 5. VẼ CỤC VÀNG 3D VÀ ĐÁ SẮC NÉT
             items.forEach(item => {
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+                ctx.save();
+                ctx.translate(item.x, item.y);
 
                 if (item.type === 'gold') {
-                    ctx.fillStyle = "#ffcc00";
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = "#ffea80";
+                    // Tạo Gradient màu vàng ánh kim 3D
+                    let goldGrad = ctx.createRadialGradient(-item.radius*0.3, -item.radius*0.3, item.radius*0.1, 0, 0, item.radius);
+                    goldGrad.addColorStop(0, "#fffae6"); // Điểm sáng trung tâm
+                    goldGrad.addColorStop(0.3, "#ffd700"); // Vàng tươi
+                    goldGrad.addColorStop(0.8, "#ffaa00"); // Vàng cam
+                    goldGrad.addColorStop(1, "#b37700");  // Viền vàng đậm
+
+                    // Đổ bóng phát sáng xung quanh cục vàng
+                    ctx.shadowColor = "rgba(255, 215, 0, 0.6)";
+                    ctx.shadowBlur = 12;
+
+                    // Vẽ hình khối đa giác góc cạnh
+                    ctx.beginPath();
+                    ctx.moveTo(item.points[0].x, item.points[0].y);
+                    for (let i = 1; i < item.points.length; i++) {
+                        ctx.lineTo(item.points[i].x, item.points[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = goldGrad;
                     ctx.fill();
-                    ctx.shadowBlur = 0;
+
+                    ctx.shadowBlur = 0; // Tắt bóng
                     ctx.strokeStyle = "#e69900";
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
-                } else {
-                    ctx.fillStyle = "#808080";
+
+                    // Vẽ các đường gân nổi 3D
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(item.points[0].x * 0.5, item.points[0].y * 0.5);
+                    ctx.lineTo(item.points[2].x * 0.5, item.points[2].y * 0.5);
+                    ctx.stroke();
+
+                    // Vệt sáng phản quang (Highlight) trên mặt vàng
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+                    ctx.beginPath();
+                    ctx.arc(-item.radius * 0.3, -item.radius * 0.3, item.radius * 0.22, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.strokeStyle = "#555555";
-                    ctx.lineWidth = 3;
+                } else {
+                    // ĐÁ (Màu xám 3D)
+                    let rockGrad = ctx.createRadialGradient(-item.radius*0.3, -item.radius*0.3, item.radius*0.1, 0, 0, item.radius);
+                    rockGrad.addColorStop(0, "#b3b3b3");
+                    rockGrad.addColorStop(0.7, "#666666");
+                    rockGrad.addColorStop(1, "#333333");
+
+                    ctx.beginPath();
+                    ctx.moveTo(item.points[0].x, item.points[0].y);
+                    for (let i = 1; i < item.points.length; i++) {
+                        ctx.lineTo(item.points[i].x, item.points[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = rockGrad;
+                    ctx.fill();
+                    ctx.strokeStyle = "#262626";
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                 }
+
+                ctx.restore();
             });
         }
 
