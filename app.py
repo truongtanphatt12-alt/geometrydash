@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Đào Vàng Cổ Điển - Streamlit", page_icon="⛏️", layout="centered")
 
 st.title("⛏️ ĐÀO VÀNG CỔ ĐIỂN")
-st.caption("Game Đào Vàng huyền thoại - Cục vàng thiết kế 3D góc cạnh, óng ánh sắc nét!")
+st.caption("Game Đào Vàng huyền thoại - Móc sắt kim loại 3D cực đẹp, tốc độ lắc siêu êm và dễ căn ngắm!")
 
 # Mã nguồn HTML, CSS và JS
 game_html = """
@@ -142,7 +142,7 @@ game_html = """
             <div class="controls-hint">
                 🎮 <b>CÁCH CHƠI:</b><br>
                 • Nhấn phím <b>MŨI TÊN XUỐNG (↓)</b> hoặc <b>DẤU CÁCH (SPACE)</b> để thả móc!<br>
-                • Đồ họa vàng 3D sắc nét, óng ánh!
+                • Móc kẹp kim loại 3D thiết kế sắc nét, lắc chậm vừa tầm.
             </div>
         </div>
 
@@ -170,11 +170,13 @@ game_html = """
             x: 375,
             y: 95,
             angle: 0,
-            angleSpeed: 0.015,
+            // ĐÃ GIẢM TỐC ĐỘ LẮC (Từ 0.015 xuống 0.011 - Lắc siêu đằm tay và dễ nhắm)
+            angleSpeed: 0.011,
             length: 40,
             state: 'swing',
-            shootSpeed: 5.0,
-            retractSpeed: 5.0,
+            // ĐÃ GIẢM TỐC ĐỘ THẢ MÓC (Từ 5.0 xuống 3.8 - Đi cực kỳ chuẩn xác)
+            shootSpeed: 3.8,
+            retractSpeed: 3.8,
             caughtItem: null
         };
 
@@ -209,19 +211,19 @@ game_html = """
             items = [];
             // Vàng siêu to (2 cục)
             for (let i = 0; i < 2; i++) {
-                items.push(createItem('gold', 32 + Math.random() * 6, 500, 1.6));
+                items.push(createItem('gold', 32 + Math.random() * 6, 500, 1.4));
             }
             // Vàng vừa (4 cục)
             for (let i = 0; i < 4; i++) {
-                items.push(createItem('gold', 20 + Math.random() * 5, 250, 3.2));
+                items.push(createItem('gold', 20 + Math.random() * 5, 250, 2.8));
             }
             // Vàng nhỏ (3 cục)
             for (let i = 0; i < 3; i++) {
-                items.push(createItem('gold', 12 + Math.random() * 4, 100, 5.0));
+                items.push(createItem('gold', 12 + Math.random() * 4, 100, 4.2));
             }
             // Đá (3 cục)
             for (let i = 0; i < 3; i++) {
-                items.push(createItem('rock', 22 + Math.random() * 8, 20, 1.2));
+                items.push(createItem('rock', 22 + Math.random() * 8, 20, 1.0));
             }
 
             clearInterval(timerInterval);
@@ -236,12 +238,10 @@ game_html = """
             }, 1000);
         }
 
-        // Tạo vật phẩm với hình dáng đa giác góc cạnh tự nhiên
         function createItem(type, radius, value, pullSpeed) {
             let points = [];
             let numPoints = type === 'gold' ? 7 + Math.floor(Math.random() * 3) : 6;
             
-            // Tạo các điểm góc ngẫu nhiên quanh bán kính
             for (let i = 0; i < numPoints; i++) {
                 let angle = (i / numPoints) * Math.PI * 2;
                 let rOffset = radius * (0.85 + Math.random() * 0.3);
@@ -288,7 +288,7 @@ game_html = """
 
                 if (hook.x < 10 || hook.x > canvas.width - 10 || hook.y > canvas.height - 10) {
                     hook.state = 'retract';
-                    hook.retractSpeed = 6;
+                    hook.retractSpeed = 5;
                 }
 
                 items.forEach(item => {
@@ -308,7 +308,7 @@ game_html = """
                 hook.x = minerPos.x + Math.sin(hook.angle) * hook.length;
                 hook.y = minerPos.y + Math.cos(hook.angle) * hook.length;
                 
-                winchAngle += 0.2;
+                winchAngle += 0.15;
 
                 if (hook.caughtItem) {
                     hook.caughtItem.x = hook.x;
@@ -354,7 +354,7 @@ game_html = """
 
             // 2. Dây cáp
             ctx.strokeStyle = "#331a00";
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
             ctx.moveTo(minerPos.x, minerPos.y);
             ctx.lineTo(hook.x, hook.y);
@@ -403,33 +403,68 @@ game_html = """
             ctx.arc(mx - 7, my - 34, 11, Math.PI, 0);
             ctx.fill();
 
-            // 4. Móc sắt
-            ctx.strokeStyle = "#444";
-            ctx.lineWidth = 4;
+            // 4. VẼ MÓC KẸP SẮT KIM LOẠI 3D SẮC NÉT (3D METALLIC CLAW)
+            ctx.save();
+            ctx.translate(hook.x, hook.y);
+            ctx.rotate(-hook.angle); // Xoay móc theo hướng cáp
+
+            // Khớp nối tròn phía trên móc
+            ctx.fillStyle = "#666";
             ctx.beginPath();
-            ctx.arc(hook.x, hook.y, 8, hook.angle, hook.angle + Math.PI);
+            ctx.arc(0, 0, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#222";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
+
+            // Hai càng kẹp kim loại uốn cong 3D
+            let clawOpen = hook.caughtItem ? 0.2 : 0.5; // Kẹp chặt lại khi gắp được đồ
+
+            // Càng kẹp bên trái
+            ctx.fillStyle = "#888";
+            ctx.beginPath();
+            ctx.moveTo(-3, 0);
+            ctx.quadraticCurveTo(-15, 12, -8, 22);
+            ctx.quadraticCurveTo(-2, 25, 0, 18);
+            ctx.quadraticCurveTo(-5, 10, -3, 0);
+            ctx.fill();
+            ctx.strokeStyle = "#222";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Càng kẹp bên phải
+            ctx.beginPath();
+            ctx.moveTo(3, 0);
+            ctx.quadraticCurveTo(15, 12, 8, 22);
+            ctx.quadraticCurveTo(2, 25, 0, 18);
+            ctx.quadraticCurveTo(5, 10, 3, 0);
+            ctx.fill();
+            ctx.stroke();
+
+            // Vệt kim loại phát sáng trên càng kẹp
+            ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.fillRect(-8, 8, 2, 8);
+            ctx.fillRect(6, 8, 2, 8);
+
+            ctx.restore();
 
             if (!gameActive && menuOverlay.style.display !== "none") return;
 
-            // 5. VẼ CỤC VÀNG 3D VÀ ĐÁ SẮC NÉT
+            // 5. VẼ VÀNG 3D VÀ ĐÁ
             items.forEach(item => {
                 ctx.save();
                 ctx.translate(item.x, item.y);
 
                 if (item.type === 'gold') {
-                    // Tạo Gradient màu vàng ánh kim 3D
                     let goldGrad = ctx.createRadialGradient(-item.radius*0.3, -item.radius*0.3, item.radius*0.1, 0, 0, item.radius);
-                    goldGrad.addColorStop(0, "#fffae6"); // Điểm sáng trung tâm
-                    goldGrad.addColorStop(0.3, "#ffd700"); // Vàng tươi
-                    goldGrad.addColorStop(0.8, "#ffaa00"); // Vàng cam
-                    goldGrad.addColorStop(1, "#b37700");  // Viền vàng đậm
+                    goldGrad.addColorStop(0, "#fffae6");
+                    goldGrad.addColorStop(0.3, "#ffd700");
+                    goldGrad.addColorStop(0.8, "#ffaa00");
+                    goldGrad.addColorStop(1, "#b37700");
 
-                    // Đổ bóng phát sáng xung quanh cục vàng
                     ctx.shadowColor = "rgba(255, 215, 0, 0.6)";
                     ctx.shadowBlur = 12;
 
-                    // Vẽ hình khối đa giác góc cạnh
                     ctx.beginPath();
                     ctx.moveTo(item.points[0].x, item.points[0].y);
                     for (let i = 1; i < item.points.length; i++) {
@@ -439,12 +474,11 @@ game_html = """
                     ctx.fillStyle = goldGrad;
                     ctx.fill();
 
-                    ctx.shadowBlur = 0; // Tắt bóng
+                    ctx.shadowBlur = 0;
                     ctx.strokeStyle = "#e69900";
                     ctx.lineWidth = 2;
                     ctx.stroke();
 
-                    // Vẽ các đường gân nổi 3D
                     ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
@@ -452,13 +486,11 @@ game_html = """
                     ctx.lineTo(item.points[2].x * 0.5, item.points[2].y * 0.5);
                     ctx.stroke();
 
-                    // Vệt sáng phản quang (Highlight) trên mặt vàng
                     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
                     ctx.beginPath();
                     ctx.arc(-item.radius * 0.3, -item.radius * 0.3, item.radius * 0.22, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
-                    // ĐÁ (Màu xám 3D)
                     let rockGrad = ctx.createRadialGradient(-item.radius*0.3, -item.radius*0.3, item.radius*0.1, 0, 0, item.radius);
                     rockGrad.addColorStop(0, "#b3b3b3");
                     rockGrad.addColorStop(0.7, "#666666");
