@@ -5,9 +5,9 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Level Devil - Streamlit Edition", page_icon="😈", layout="centered")
 
 st.title("😈 LEVEL DEVIL")
-st.caption("Game Platformer Troll kinh điển - Hãy cẩn thận với những cái bẫy bất ngờ!")
+st.caption("Game Platformer Troll kinh điển - Tốc độ mượt mà, Cấp độ khó tăng dần!")
 
-# Mã nguồn HTML, CSS và JS cho game Level Devil
+# Mã nguồn HTML, CSS và JS
 game_html = """
 <!DOCTYPE html>
 <html>
@@ -39,13 +39,11 @@ game_html = """
             display: block;
         }
         
-        /* Overlay Menu giống hệt ảnh mẫu */
+        /* Overlay Menu */
         #menuOverlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background-color: #e58229;
             display: flex;
             flex-direction: column;
@@ -59,7 +57,6 @@ game_html = """
             background-color: #791c0e;
             padding: 25px 0;
             text-align: center;
-            position: relative;
             border-bottom: 8px solid #c24b17;
         }
 
@@ -73,7 +70,6 @@ game_html = """
             text-transform: uppercase;
         }
 
-        /* Dãy hình răng cưa lửa/gai dưới menu */
         .fire-teeth {
             width: 100%;
             height: 20px;
@@ -84,13 +80,13 @@ game_html = """
                 #e58229 10px,
                 #e58229 20px
             );
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .btn-container {
             display: flex;
             gap: 40px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .mode-btn {
@@ -109,9 +105,7 @@ game_html = """
             transition: transform 0.1s, box-shadow 0.1s;
         }
 
-        .mode-btn.two-p {
-            background-color: #eb8f85;
-        }
+        .mode-btn.two-p { background-color: #eb8f85; }
 
         .mode-btn:hover {
             transform: translateY(-3px);
@@ -131,16 +125,14 @@ game_html = """
             gap: 8px;
         }
 
-        .player-sprite {
+        .player-preview {
             width: 24px;
-            height: 38px;
-            background-color: #2b1d1d;
-            border-radius: 4px 4px 0 0;
+            height: 34px;
+            background-color: #222;
+            border-radius: 6px 6px 2px 2px;
             position: relative;
         }
-        .player-sprite.p2 {
-            background-color: #8b2b2b;
-        }
+        .player-preview.p2 { background-color: #a32222; }
 
         .btn-label {
             width: 100%;
@@ -160,9 +152,7 @@ game_html = """
 
         #uiHeader {
             position: absolute;
-            top: 10px;
-            left: 15px;
-            right: 15px;
+            top: 12px; left: 20px; right: 20px;
             display: flex;
             justify-content: space-between;
             font-size: 20px;
@@ -181,7 +171,6 @@ game_html = """
             <div id="deathText">DEATHS: 0</div>
         </div>
 
-        <!-- Menu overlay khớp 100% hình ảnh -->
         <div id="menuOverlay">
             <div class="title-container">
                 <h1 class="game-title">LEVEL DEVIL</h1>
@@ -191,15 +180,15 @@ game_html = """
             <div class="btn-container">
                 <div class="mode-btn" onclick="selectMode(1)">
                     <div class="btn-icon">
-                        <div class="player-sprite"></div>
+                        <div class="player-preview"></div>
                     </div>
                     <div class="btn-label">1 Player</div>
                 </div>
 
                 <div class="mode-btn two-p" onclick="selectMode(2)">
                     <div class="btn-icon">
-                        <div class="player-sprite p2"></div>
-                        <div class="player-sprite"></div>
+                        <div class="player-preview p2"></div>
+                        <div class="player-preview"></div>
                     </div>
                     <div class="btn-label">2 Player</div>
                 </div>
@@ -216,12 +205,11 @@ game_html = """
         const levelText = document.getElementById("levelText");
         const deathText = document.getElementById("deathText");
 
-        let gameMode = 1; // 1 hoặc 2 người chơi
+        let gameMode = 1;
         let currentLevel = 1;
         let totalDeaths = 0;
         let gameActive = false;
 
-        // Bàn phím
         const keys = {};
         window.addEventListener("keydown", e => {
             keys[e.code] = true;
@@ -231,7 +219,7 @@ game_html = """
         });
         window.addEventListener("keyup", e => { keys[e.code] = false; });
 
-        // Cấu trúc nhân vật
+        // LỚP NHÂN VẬT ĐƯỢC CHỈNH TỐC ĐỘ VÀ ĐỒ HỌA MỚI
         class Player {
             constructor(x, y, color, controls) {
                 this.spawnX = x;
@@ -243,9 +231,11 @@ game_html = """
                 this.vx = 0;
                 this.vy = 0;
                 this.color = color;
-                this.controls = controls; // {left, right, jump}
+                this.controls = controls;
                 this.isGrounded = false;
                 this.alive = true;
+                this.facing = 1; // 1: Phải, -1: Trái
+                this.animTimer = 0;
             }
 
             reset() {
@@ -260,19 +250,26 @@ game_html = """
             update(platforms, hazards) {
                 if (!this.alive) return;
 
-                // Điều khiển di chuyển
-                if (keys[this.controls.left]) this.vx = -4;
-                else if (keys[this.controls.right]) this.vx = 4;
-                else this.vx = 0;
+                // GIẢM TỐC ĐỘ CHẠY LẠI (Từ 4.0 xuống 2.8) giúp điều khiển đằm tay hơn
+                const moveSpeed = 2.8; 
+                if (keys[this.controls.left]) {
+                    this.vx = -moveSpeed;
+                    this.facing = -1;
+                } else if (keys[this.controls.right]) {
+                    this.vx = moveSpeed;
+                    this.facing = 1;
+                } else {
+                    this.vx = 0;
+                }
 
-                // Nhảy
+                // GIẢM LỰC NHẢY (Từ -9.5 xuống -8.2) để dễ nhảy chính xác hơn
                 if (keys[this.controls.jump] && this.isGrounded) {
-                    this.vy = -9.5;
+                    this.vy = -8.2;
                     this.isGrounded = false;
                 }
 
-                // Trọng lực
-                this.vy += 0.5;
+                // Trọng lực êm hơn
+                this.vy += 0.42;
 
                 // Cập nhật vị trí X & Va chạm
                 this.x += this.vx;
@@ -299,12 +296,13 @@ game_html = """
                     }
                 });
 
-                // Kiểm tra va chạm với bẫy / rớt ra ngoài
                 if (this.y > canvas.height + 50) this.die();
 
                 hazards.forEach(h => {
                     if (checkCollision(this, h)) this.die();
                 });
+
+                this.animTimer += Math.abs(this.vx);
             }
 
             die() {
@@ -317,16 +315,51 @@ game_html = """
 
             draw() {
                 if (!this.alive) return;
+
+                // 1. Thân nhân vật (Bo góc)
                 ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                
-                // Vẽ mắt
-                ctx.fillStyle = "#fff";
-                ctx.fillRect(this.x + (this.vx >= 0 ? 14 : 4), this.y + 8, 5, 5);
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, [6, 6, 2, 2]);
+                ctx.fill();
+
+                // 2. Hai sừng quỷ nhỏ trên đầu
+                ctx.fillStyle = "#380a04";
+                ctx.beginPath();
+                ctx.moveTo(this.x + 4, this.y);
+                ctx.lineTo(this.x + 1, this.y - 5);
+                ctx.lineTo(this.x + 8, this.y);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width - 8, this.y);
+                ctx.lineTo(this.x + this.width - 1, this.y - 5);
+                ctx.lineTo(this.x + this.width - 4, this.y);
+                ctx.fill();
+
+                // 3. Mắt nhân vật (Di chuyển theo hướng đi)
+                ctx.fillStyle = "#ffffff";
+                let eyeOffsetX = this.facing === 1 ? 11 : 3;
+                ctx.fillRect(this.x + eyeOffsetX, this.y + 7, 5, 6);
+                ctx.fillRect(this.x + eyeOffsetX + 6, this.y + 7, 5, 6);
+
+                ctx.fillStyle = "#000000";
+                let pupilX = this.facing === 1 ? 3 : 0;
+                ctx.fillRect(this.x + eyeOffsetX + pupilX, this.y + 9, 2, 3);
+                ctx.fillRect(this.x + eyeOffsetX + 6 + pupilX, this.y + 9, 2, 3);
+
+                // 4. Chân nhúc nhích khi di chuyển
+                ctx.fillStyle = "#111";
+                let legOffset = Math.sin(this.animTimer * 0.2) * 3;
+                if (this.isGrounded && this.vx !== 0) {
+                    ctx.fillRect(this.x + 3, this.y + this.height, 5, 3 + legOffset);
+                    ctx.fillRect(this.x + this.width - 8, this.y + this.height, 5, 3 - legOffset);
+                } else {
+                    ctx.fillRect(this.x + 4, this.y + this.height, 4, 3);
+                    ctx.fillRect(this.x + this.width - 8, this.y + this.height, 4, 3);
+                }
             }
         }
 
-        // Kiểm tra va chạm AABB
         function checkCollision(a, b) {
             return a.x < b.x + b.w &&
                    a.x + a.width > b.x &&
@@ -334,12 +367,12 @@ game_html = """
                    a.y + a.height > b.y;
         }
 
-        // Định nghĩa các level & hiệu ứng TROLL đặc trưng của Level Devil
         let players = [];
         let platforms = [];
         let hazards = [];
         let door = { x: 0, y: 0, w: 32, h: 48 };
 
+        // QUẢN LÝ 5 CẤP ĐỘ KHÓ TĂNG DẦN
         function loadLevel(lvl) {
             currentLevel = lvl;
             levelText.innerText = `LEVEL ${currentLevel}`;
@@ -347,41 +380,58 @@ game_html = """
             hazards = [];
 
             if (lvl === 1) {
-                // LEVEL 1: Cửa tự động dịch chuyển xa ra khi lại gần
-                door = { x: 700, y: 312, w: 32, h: 48, defaultX: 700 };
-                platforms = [
-                    { x: 50, y: 360, w: 200, h: 40 },
-                    { x: 300, y: 360, w: 200, h: 40 },
-                    { x: 550, y: 360, w: 200, h: 40 }
-                ];
-            } else if (lvl === 2) {
-                // LEVEL 2: Đất sụt lở bất ngờ khi đi qua
+                // LEVEL 1 (Dễ): Cửa ra vào nhích nhẹ ra xa
                 door = { x: 700, y: 312, w: 32, h: 48 };
-                platforms = [
-                    { x: 50, y: 360, w: 180, h: 40 },
-                    { x: 280, y: 360, w: 240, h: 40, isTrap: true, triggered: false }, // Đất biến mất
-                    { x: 580, y: 360, w: 170, h: 40 }
-                ];
-            } else if (lvl === 3) {
-                // LEVEL 3: Cọc nhọn bất ngờ nhô lên
-                door = { x: 720, y: 312, w: 32, h: 48 };
                 platforms = [
                     { x: 50, y: 360, w: 700, h: 40 }
                 ];
+            } else if (lvl === 2) {
+                // LEVEL 2 (Vừa): Bẫy cọc nhọn nhô lên
+                door = { x: 700, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 250, h: 40 },
+                    { x: 300, y: 360, w: 450, h: 40 }
+                ];
                 hazards = [
-                    { x: 380, y: 400, w: 40, h: 30, targetY: 330, isSpikeTrap: true }
+                    { x: 420, y: 400, w: 30, h: 30, targetY: 330, isSpike: true }
+                ];
+            } else if (lvl === 3) {
+                // LEVEL 3 (Khó hơn): Sàn bị rớt khi giậm lên
+                door = { x: 700, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 200, h: 40 },
+                    { x: 290, y: 360, w: 200, h: 40, isFalling: true },
+                    { x: 530, y: 360, w: 220, h: 40 }
+                ];
+            } else if (lvl === 4) {
+                // LEVEL 4 (Rất khó): Khối trần hạ xuống đè chết
+                door = { x: 710, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 700, h: 40 },
+                    { x: 350, y: -100, w: 120, h: 200, isCrusher: true, targetY: 160 } // Trần sụt
+                ];
+            } else if (lvl === 5) {
+                // LEVEL 5 (Siêu Troll): Cửa di chuyển + Sàn đứt đoạn
+                door = { x: 680, y: 312, w: 32, h: 48 };
+                platforms = [
+                    { x: 50, y: 360, w: 180, h: 40 },
+                    { x: 270, y: 360, w: 180, h: 40, isFalling: true },
+                    { x: 490, y: 360, w: 260, h: 40 }
+                ];
+                hazards = [
+                    { x: 540, y: 400, w: 30, h: 30, targetY: 330, isSpike: true }
                 ];
             }
 
-            // Khởi tạo người chơi
+            // Khởi tạo vị trí Người chơi
             if (gameMode === 1) {
                 players = [
-                    new Player(80, 300, "#2b1d1d", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" })
+                    new Player(80, 300, "#222222", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" })
                 ];
             } else {
                 players = [
-                    new Player(80, 300, "#2b1d1d", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" }),
-                    new Player(120, 300, "#8b2b2b", { left: "KeyA", right: "KeyD", jump: "KeyW" })
+                    new Player(70, 300, "#222222", { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" }),
+                    new Player(110, 300, "#a32222", { left: "KeyA", right: "KeyD", jump: "KeyW" })
                 ];
             }
         }
@@ -404,47 +454,73 @@ game_html = """
 
             players.forEach(p => p.update(platforms, hazards));
 
-            // TROLL MECHANICS DỰA TRÊN LEVEL
+            // TROLL MECHANICS THEO CẤP ĐỘ
             if (currentLevel === 1) {
-                // Nếu người chơi lại gần cửa, cửa tự dịch chuyển sang phải
                 players.forEach(p => {
-                    if (Math.abs(p.x - door.x) < 100 && door.x < 740) {
-                        door.x += 3;
+                    if (Math.abs(p.x - door.x) < 80 && door.x < 740) {
+                        door.x += 1.8; // Cửa nhích ra xa vừa phải
                     }
                 });
             } else if (currentLevel === 2) {
-                // Bẫy đất sụt biến mất
-                platforms.forEach((p, idx) => {
-                    if (p.isTrap) {
-                        players.forEach(player => {
-                            if (player.x > p.x && player.x < p.x + p.w) {
-                                p.y += 8; // Sụt hố xuống dưới
+                hazards.forEach(h => {
+                    if (h.isSpike) {
+                        players.forEach(p => {
+                            if (Math.abs(p.x - h.x) < 100 && h.y > h.targetY) {
+                                h.y -= 4; // Bẫy cọc trồi lên
                             }
                         });
                     }
                 });
             } else if (currentLevel === 3) {
-                // Bẫy chông nhô lên bất ngờ
-                hazards.forEach(h => {
-                    if (h.isSpikeTrap) {
-                        players.forEach(p => {
-                            if (Math.abs(p.x - h.x) < 120 && h.y > h.targetY) {
-                                h.y -= 5;
+                platforms.forEach(p => {
+                    if (p.isFalling) {
+                        players.forEach(player => {
+                            if (player.x > p.x - 10 && player.x < p.x + p.w) {
+                                p.y += 6; // Sàn rớt xuống
                             }
+                        });
+                    }
+                });
+            } else if (currentLevel === 4) {
+                platforms.forEach(p => {
+                    if (p.isCrusher) {
+                        players.forEach(player => {
+                            if (player.x > p.x - 50 && p.y < p.targetY) {
+                                p.y += 5; // Trần đè xuống
+                            }
+                        });
+                    }
+                });
+            } else if (currentLevel === 5) {
+                // Tối hợp cọc nhọn + sàn rớt + cửa di chuyển
+                players.forEach(p => {
+                    if (Math.abs(p.x - door.x) < 70 && door.x < 740) door.x += 1.5;
+                });
+                platforms.forEach(p => {
+                    if (p.isFalling) {
+                        players.forEach(player => {
+                            if (player.x > p.x - 10 && player.x < p.x + p.w) p.y += 6;
+                        });
+                    }
+                });
+                hazards.forEach(h => {
+                    if (h.isSpike) {
+                        players.forEach(p => {
+                            if (Math.abs(p.x - h.x) < 80 && h.y > h.targetY) h.y -= 4;
                         });
                     }
                 });
             }
 
-            // Kiểm tra thắng level (khi tất cả người chơi sống sót chạm cửa)
+            // Kiểm tra hoàn thành Level
             let alivePlayers = players.filter(p => p.alive);
             if (alivePlayers.length > 0) {
                 let allReachedDoor = alivePlayers.every(p => checkCollision(p, door));
                 if (allReachedDoor) {
-                    if (currentLevel < 3) {
+                    if (currentLevel < 5) {
                         loadLevel(currentLevel + 1);
                     } else {
-                        alert("🎉 CHÚC MỪNG BẠN ĐÃ VƯỢT QUA LEVEL DEVIL!");
+                        alert("🎉 XIN CHÚC MỪNG! BẠN ĐÃ CHINH PHỤC THÀNH CÔNG LEVEL DEVIL!");
                         menuOverlay.style.display = "flex";
                         gameActive = false;
                     }
@@ -453,19 +529,19 @@ game_html = """
         }
 
         function draw() {
-            // Nền cam ấm áp của Level Devil
+            // Nền cam Level Devil
             ctx.fillStyle = "#e58229";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (!gameActive) return;
 
-            // Vẽ sàn / Platforms
+            // Sàn
             ctx.fillStyle = "#791c0e";
             platforms.forEach(p => {
                 ctx.fillRect(p.x, p.y, p.w, p.h);
             });
 
-            // Vẽ bẫy chông
+            // Bẫy cọc nhọn
             ctx.fillStyle = "#222";
             hazards.forEach(h => {
                 ctx.beginPath();
@@ -475,13 +551,13 @@ game_html = """
                 ctx.fill();
             });
 
-            // Vẽ Cửa hoàn thành (Door)
+            // Cửa ra vào
             ctx.fillStyle = "#380a04";
             ctx.fillRect(door.x, door.y, door.w, door.h);
             ctx.fillStyle = "#ffda66";
             ctx.fillRect(door.x + 4, door.y + 4, door.w - 8, door.h - 8);
 
-            // Vẽ người chơi
+            // Nhân vật
             players.forEach(p => p.draw());
         }
 
