@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Chicken Invaders - Streamlit", page_icon="🐔", layout="centered")
 
 st.title("🐔 CHICKEN INVADERS")
-st.caption("Game Bắn Gà Vũ Trụ - Đàn gà thiết kế chân thực, tốc độ di chuyển chậm vừa phải dễ chơi!")
+st.caption("Game Bắn Gà Vũ Trụ - Tốc độ đạn đã được giảm lại cho vừa tầm, dễ chơi!")
 
 # Mã nguồn HTML, CSS và JS
 game_html = """
@@ -218,7 +218,6 @@ game_html = """
                         width: 42,
                         height: 38,
                         dir: 1,
-                        // GIẢM TỐC ĐỘ DI CHUYỂN CỦA GÀ (Chậm rãi, không bị quá nhanh)
                         speed: 0.6 + wave * 0.15,
                         animTimer: Math.random() * 10
                     });
@@ -241,8 +240,9 @@ game_html = """
 
             if (player.cooldown > 0) player.cooldown--;
             if (keys["Space"] && player.cooldown === 0) {
-                bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 16, speed: 9 });
-                player.cooldown = 10;
+                // GIẢM TỐC ĐỘ ĐẠN BAY (Từ 9 xuống 5.0 để đạn đi từ từ, dễ nhắm bắn)
+                bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 16, speed: 5.0 });
+                player.cooldown = 12;
             }
 
             bullets.forEach((b, index) => {
@@ -257,7 +257,7 @@ game_html = """
                 if (c.x > canvas.width - 60 || c.x < 10) changeDir = true;
 
                 if (Math.random() < 0.0012 * wave) {
-                    eggs.push({ x: c.x + c.width / 2, y: c.y + c.height, width: 10, height: 14, speed: 2.5 + wave * 0.3 });
+                    eggs.push({ x: c.x + c.width / 2, y: c.y + c.height, width: 10, height: 14, speed: 2.2 + wave * 0.2 });
                 }
             });
 
@@ -354,7 +354,7 @@ game_html = """
             ctx.arc(player.x + player.width / 2, player.y + player.height + 4, 6, 0, Math.PI * 2);
             ctx.fill();
 
-            // Đạn
+            // Đạn (đi chậm)
             ctx.fillStyle = "#38bdf8";
             ctx.shadowBlur = 10;
             ctx.shadowColor = "#38bdf8";
@@ -363,25 +363,22 @@ game_html = """
             });
             ctx.shadowBlur = 0;
 
-            // ĐÀN GÀ (THIẾT KẾ GIỐNG THẬT & ĐÁNG YÊU HƠN)
+            // Gà
             chickens.forEach(c => {
                 let cx = c.x + c.width / 2;
                 let cy = c.y + c.height / 2;
                 let wingFlap = Math.sin(c.animTimer) * 6;
 
-                // 1. Thân gà (Màu xanh dương nhạt pha trắng theo phong cách Chicken Invaders cổ điển)
                 ctx.fillStyle = "#60a5fa";
                 ctx.beginPath();
                 ctx.arc(cx, cy + 2, 14, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Phần ngực trắng phao
                 ctx.fillStyle = "#ffffff";
                 ctx.beginPath();
                 ctx.arc(cx, cy + 5, 10, 0, Math.PI);
                 ctx.fill();
 
-                // 2. Cánh gà vỗ hai bên
                 ctx.fillStyle = "#ffffff";
                 ctx.beginPath();
                 ctx.ellipse(cx - 16, cy + wingFlap, 6, 12, Math.PI / 6, 0, Math.PI * 2);
@@ -390,25 +387,17 @@ game_html = """
                 ctx.ellipse(cx + 16, cy - wingFlap, 6, 12, -Math.PI / 6, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 3. Đầu gà trắng tròn phía trên
                 ctx.fillStyle = "#ffffff";
                 ctx.beginPath();
                 ctx.arc(cx, cy - 8, 11, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 4. Mắt gà (Tròn to, tinh anh)
                 ctx.fillStyle = "#000000";
                 ctx.beginPath();
                 ctx.arc(cx - 3, cy - 10, 2.5, 0, Math.PI * 2);
                 ctx.arc(cx + 4, cy - 10, 2.5, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // Tròng sáng mắt
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(cx - 4, cy - 11, 1, 1);
-                ctx.fillRect(cx + 3, cy - 11, 1, 1);
 
-                // 5. Mỏ gà (Màu vàng cam hình tam giác nhọn)
                 ctx.fillStyle = "#f59e0b";
                 ctx.beginPath();
                 ctx.moveTo(cx - 2, cy - 6);
@@ -416,13 +405,9 @@ game_html = """
                 ctx.lineTo(cx - 1, cy - 1);
                 ctx.fill();
 
-                // 6. Mào đỏ trên đầu
                 ctx.fillStyle = "#ef4444";
                 ctx.beginPath();
                 ctx.arc(cx, cy - 18, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(cx - 4, cy - 16, 3, 0, Math.PI * 2);
                 ctx.fill();
             });
 
@@ -457,5 +442,4 @@ game_html = """
 </html>
 """
 
-# Hiển thị game trong ứng dụng Streamlit
 components.html(game_html, height=560)
