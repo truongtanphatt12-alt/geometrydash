@@ -5,9 +5,9 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Chicken Invaders - Streamlit", page_icon="🐔", layout="centered")
 
 st.title("🐔 CHICKEN INVADERS")
-st.caption("Game Bắn Gà Vũ Trụ Kinh Điển - Bảo vệ Trái Đất khỏi đội quân gà béo!")
+st.caption("Game Bắn Gà Vũ Trụ - Đàn gà thiết kế chân thực, tốc độ di chuyển chậm vừa phải dễ chơi!")
 
-# Mã nguồn HTML, CSS và JS cho game Chicken Invaders
+# Mã nguồn HTML, CSS và JS
 game_html = """
 <!DOCTYPE html>
 <html>
@@ -40,7 +40,6 @@ game_html = """
             display: block;
         }
         
-        /* Overlay Menu */
         #menuOverlay {
             position: absolute;
             top: 0; left: 0;
@@ -152,7 +151,6 @@ game_html = """
         let wave = 1;
         let lives = 3;
 
-        // Quản lý Bàn phím
         const keys = {};
         window.addEventListener("keydown", e => {
             keys[e.code] = true;
@@ -162,7 +160,6 @@ game_html = """
         });
         window.addEventListener("keyup", e => { keys[e.code] = false; });
 
-        // Ngôi sao nền vũ trụ
         const stars = [];
         for (let i = 0; i < 70; i++) {
             stars.push({
@@ -173,7 +170,6 @@ game_html = """
             });
         }
 
-        // Phi thuyền người chơi
         const player = {
             x: 330,
             y: 440,
@@ -186,7 +182,7 @@ game_html = """
         let bullets = [];
         let chickens = [];
         let eggs = [];
-        let drumsticks = []; // Đùi gà rớt xuống
+        let drumsticks = [];
 
         function startGame() {
             score = 0;
@@ -210,7 +206,6 @@ game_html = """
             livesText.innerText = "❤️".repeat(Math.max(0, lives));
         }
 
-        // Tạo đàn gà
         function spawnChickens() {
             chickens = [];
             const rows = Math.min(2 + wave, 5);
@@ -220,10 +215,11 @@ game_html = """
                     chickens.push({
                         x: 80 + c * 70,
                         y: 50 + r * 50,
-                        width: 36,
-                        height: 32,
+                        width: 42,
+                        height: 38,
                         dir: 1,
-                        speed: 1 + wave * 0.3,
+                        // GIẢM TỐC ĐỘ DI CHUYỂN CỦA GÀ (Chậm rãi, không bị quá nhanh)
+                        speed: 0.6 + wave * 0.15,
                         animTimer: Math.random() * 10
                     });
                 }
@@ -231,7 +227,6 @@ game_html = """
         }
 
         function update() {
-            // Cập nhật nền sao
             stars.forEach(s => {
                 s.y += s.speed;
                 if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
@@ -239,52 +234,45 @@ game_html = """
 
             if (!gameActive) return;
 
-            // Di chuyển Phi thuyền
             if ((keys["ArrowLeft"] || keys["KeyA"]) && player.x > 10) player.x -= player.speed;
             if ((keys["ArrowRight"] || keys["KeyD"]) && player.x < canvas.width - player.width - 10) player.x += player.speed;
             if ((keys["ArrowUp"] || keys["KeyW"]) && player.y > 100) player.y -= player.speed;
             if ((keys["ArrowDown"] || keys["KeyS"]) && player.y < canvas.height - player.height - 10) player.y += player.speed;
 
-            // Bắn đạn
             if (player.cooldown > 0) player.cooldown--;
             if (keys["Space"] && player.cooldown === 0) {
                 bullets.push({ x: player.x + player.width / 2 - 3, y: player.y, width: 6, height: 16, speed: 9 });
-                player.cooldown = 10; // Tốc độ bắn
+                player.cooldown = 10;
             }
 
-            // Di chuyển đạn người chơi
             bullets.forEach((b, index) => {
                 b.y -= b.speed;
                 if (b.y < -20) bullets.splice(index, 1);
             });
 
-            // Di chuyển và kiểm tra Gà
             let changeDir = false;
             chickens.forEach(c => {
                 c.x += c.speed * c.dir;
-                c.animTimer += 0.1;
-                if (c.x > canvas.width - 50 || c.x < 10) changeDir = true;
+                c.animTimer += 0.08;
+                if (c.x > canvas.width - 60 || c.x < 10) changeDir = true;
 
-                // Gà thả trứng ngẫu nhiên
-                if (Math.random() < 0.002 * wave) {
-                    eggs.push({ x: c.x + c.width / 2, y: c.y + c.height, width: 10, height: 14, speed: 3 + wave * 0.4 });
+                if (Math.random() < 0.0012 * wave) {
+                    eggs.push({ x: c.x + c.width / 2, y: c.y + c.height, width: 10, height: 14, speed: 2.5 + wave * 0.3 });
                 }
             });
 
             if (changeDir) {
                 chickens.forEach(c => {
                     c.dir *= -1;
-                    c.y += 12; // Gà tiến dần xuống dưới
+                    c.y += 10;
                 });
             }
 
-            // Va chạm Đạn <-> Gà
             bullets.forEach((b, bIdx) => {
                 chickens.forEach((c, cIdx) => {
                     if (b.x < c.x + c.width && b.x + b.width > c.x &&
                         b.y < c.y + c.height && b.y + b.height > c.y) {
                         
-                        // Thả đùi gà
                         if (Math.random() < 0.4) {
                             drumsticks.push({ x: c.x + c.width / 2, y: c.y, width: 16, height: 16, speed: 2 });
                         }
@@ -297,34 +285,29 @@ game_html = """
                 });
             });
 
-            // Di chuyển Trứng & Va chạm với Player
             eggs.forEach((e, eIdx) => {
                 e.y += e.speed;
                 if (e.y > canvas.height) eggs.splice(eIdx, 1);
 
                 if (e.x < player.x + player.width && e.x + e.width > player.x &&
                     e.y < player.y + player.height && e.y + e.height > player.y) {
-                    
                     eggs.splice(eIdx, 1);
                     playerHit();
                 }
             });
 
-            // Di chuyển Đùi gà & Nhặt đùi gà
             drumsticks.forEach((d, dIdx) => {
                 d.y += d.speed;
                 if (d.y > canvas.height) drumsticks.splice(dIdx, 1);
 
                 if (d.x < player.x + player.width && d.x + d.width > player.x &&
                     d.y < player.y + player.height && d.y + d.height > player.y) {
-                    
                     drumsticks.splice(dIdx, 1);
                     score += 100;
                     updateUI();
                 }
             });
 
-            // Qua Wave mới khi hết gà
             if (chickens.length === 0) {
                 wave++;
                 updateUI();
@@ -348,7 +331,6 @@ game_html = """
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Vẽ Ngôi sao
             ctx.fillStyle = "#ffffff";
             stars.forEach(s => {
                 ctx.beginPath();
@@ -358,7 +340,7 @@ game_html = """
 
             if (!gameActive && menuOverlay.style.display !== "none") return;
 
-            // 2. Vẽ Phi thuyền
+            // Phi thuyền
             ctx.fillStyle = "#38bdf8";
             ctx.beginPath();
             ctx.moveTo(player.x + player.width / 2, player.y);
@@ -367,13 +349,12 @@ game_html = """
             ctx.closePath();
             ctx.fill();
 
-            // Động cơ đuôi phi thuyền phát sáng
             ctx.fillStyle = "#f59e0b";
             ctx.beginPath();
             ctx.arc(player.x + player.width / 2, player.y + player.height + 4, 6, 0, Math.PI * 2);
             ctx.fill();
 
-            // 3. Vẽ Đạn La-ze
+            // Đạn
             ctx.fillStyle = "#38bdf8";
             ctx.shadowBlur = 10;
             ctx.shadowColor = "#38bdf8";
@@ -382,37 +363,70 @@ game_html = """
             });
             ctx.shadowBlur = 0;
 
-            // 4. Vẽ Đàn Gà
+            // ĐÀN GÀ (THIẾT KẾ GIỐNG THẬT & ĐÁNG YÊU HƠN)
             chickens.forEach(c => {
-                let wingOffset = Math.sin(c.animTimer) * 4;
+                let cx = c.x + c.width / 2;
+                let cy = c.y + c.height / 2;
+                let wingFlap = Math.sin(c.animTimer) * 6;
 
-                // Thân gà
-                ctx.fillStyle = "#38bdf8";
+                // 1. Thân gà (Màu xanh dương nhạt pha trắng theo phong cách Chicken Invaders cổ điển)
+                ctx.fillStyle = "#60a5fa";
                 ctx.beginPath();
-                ctx.arc(c.x + c.width / 2, c.y + c.height / 2, 14, 0, Math.PI * 2);
+                ctx.arc(cx, cy + 2, 14, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Cánh gà
+                // Phần ngực trắng phao
                 ctx.fillStyle = "#ffffff";
-                ctx.fillRect(c.x - 4, c.y + 6 + wingOffset, 8, 12);
-                ctx.fillRect(c.x + c.width - 4, c.y + 6 - wingOffset, 8, 12);
-
-                // Mào đỏ
-                ctx.fillStyle = "#ef4444";
                 ctx.beginPath();
-                ctx.arc(c.x + c.width / 2, c.y + 2, 5, 0, Math.PI * 2);
+                ctx.arc(cx, cy + 5, 10, 0, Math.PI);
                 ctx.fill();
 
-                // Mỏ vàng
+                // 2. Cánh gà vỗ hai bên
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.ellipse(cx - 16, cy + wingFlap, 6, 12, Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(cx + 16, cy - wingFlap, 6, 12, -Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 3. Đầu gà trắng tròn phía trên
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(cx, cy - 8, 11, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 4. Mắt gà (Tròn to, tinh anh)
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.arc(cx - 3, cy - 10, 2.5, 0, Math.PI * 2);
+                ctx.arc(cx + 4, cy - 10, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Tròng sáng mắt
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(cx - 4, cy - 11, 1, 1);
+                ctx.fillRect(cx + 3, cy - 11, 1, 1);
+
+                // 5. Mỏ gà (Màu vàng cam hình tam giác nhọn)
                 ctx.fillStyle = "#f59e0b";
                 ctx.beginPath();
-                ctx.moveTo(c.x + c.width / 2 - 3, c.y + 16);
-                ctx.lineTo(c.x + c.width / 2 + 3, c.y + 16);
-                ctx.lineTo(c.x + c.width / 2, c.y + 22);
+                ctx.moveTo(cx - 2, cy - 6);
+                ctx.lineTo(cx + 5, cy - 4);
+                ctx.lineTo(cx - 1, cy - 1);
+                ctx.fill();
+
+                // 6. Mào đỏ trên đầu
+                ctx.fillStyle = "#ef4444";
+                ctx.beginPath();
+                ctx.arc(cx, cy - 18, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx - 4, cy - 16, 3, 0, Math.PI * 2);
                 ctx.fill();
             });
 
-            // 5. Vẽ Trứng
+            // Trứng
             ctx.fillStyle = "#fef08a";
             eggs.forEach(e => {
                 ctx.beginPath();
@@ -420,7 +434,7 @@ game_html = """
                 ctx.fill();
             });
 
-            // 6. Vẽ Đùi gà
+            // Đùi gà
             ctx.fillStyle = "#fbbf24";
             drumsticks.forEach(d => {
                 ctx.beginPath();
@@ -428,7 +442,6 @@ game_html = """
                 ctx.fill();
                 ctx.fillStyle = "#ffffff";
                 ctx.fillRect(d.x - 2, d.y - 8, 4, 6);
-                ctx.fillStyle = "#fbbf24";
             });
         }
 
